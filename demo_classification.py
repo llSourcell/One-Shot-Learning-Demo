@@ -1,6 +1,5 @@
 import os
 import numpy as np
-import copy
 from scipy.ndimage import imread
 from scipy.spatial.distance import cdist
 
@@ -12,56 +11,60 @@ path_to_all_runs = os.path.join(path_to_script_dir, 'all_runs')
 fname_label = 'class_labels.txt'  # where class labels are stored for each run
 
 
-def classification_run(folder,f_load,f_cost,ftype='cost'):
-	# Compute error rate for one run of one-shot classification
-	#
-	# Input
-	#  folder : contains images for a run of one-shot classification
-	#  f_load : itemA = f_load('file.png') should read in the image file and process it
-	#  f_cost : f_cost(itemA,itemB) should compute similarity between two images, using output of f_load
-	#  ftype  : 'cost' if small values from f_cost mean more similar, or 'score' if large values are more similar
-	#
-	# Output
-	#  perror : percent errors (0 to 100% error)
-	# 
-	assert ((ftype=='cost') | (ftype=='score'))
+def classification_run(folder, f_load, f_cost, ftype='cost'):
+    # Compute error rate for one run of one-shot classification
+    #
+    # Input
+    #  folder : contains images for a run of one-shot classification
+    #  f_load : itemA = f_load('file.png') should read in the image file and
+    #           process it
+    #  f_cost : f_cost(itemA,itemB) should compute similarity between two
+    #           images, using output of f_load
+    #  ftype  : 'cost' if small values from f_cost mean more similar,
+    #           or 'score' if large values are more similar
+    #
+    # Output
+    #  perror : percent errors (0 to 100% error)
+    #
+    assert ftype in {'cost', 'score'}
 
-	# get file names
-	with open(folder+'/'+fname_label) as f:
-		content = f.read().splitlines()
-	pairs = [line.split() for line in content]
-	test_files  = [pair[0] for pair in pairs]
-	train_files = [pair[1] for pair in pairs]
-	answers_files = copy.copy(train_files)
-	test_files.sort()
-	train_files.sort()	
-	ntrain = len(train_files)
-	ntest = len(test_files)
+    # get file names
+    with open(os.path.join(path_to_all_runs, folder, fname_label)) as f:
+        pairs = [line.split() for line in f.readlines()]
+    # Unzip the pairs into two sets of tuples
+    test_files, train_files = zip(*pairs)
 
-	# load the images (and, if needed, extract features)
-	train_items = [f_load(f) for f in train_files]
-	test_items  = [f_load(f) for f in test_files ]
+    answers_files = list(train_files)  # Copy the training file list
+    test_files = sorted(test_files)
+    train_files = sorted(train_files)
+    n_train = len(train_files)
+    n_test = len(test_files)
 
-	# compute cost matrix
-	costM = np.zeros((ntest,ntrain),float)
-	for i in range(ntest):
-		for c in range(ntrain):
-			costM[i,c] = f_cost(test_items[i],train_items[c])
-	if ftype == 'cost':
-		YHAT = np.argmin(costM,axis=1)
-	elif ftype == 'score':
-		YHAT = np.argmax(costM,axis=1)
-	else:
-		assert False
+    # load the images (and, if needed, extract features)
+    train_items = [f_load(os.path.join(path_to_all_runs, f))
+                   for f in train_files]
+    test_items = [f_load(os.path.join(path_to_all_runs, f))
+                  for f in test_files]
 
-	# compute the error rate
-	correct = 0.0
-	for i in range(ntest):
-		if train_files[YHAT[i]] == answers_files[i]:
-			correct += 1.0
-	pcorrect = 100 * correct / ntest
-	perror = 100 - pcorrect
-	return perror
+    # compute cost matrix
+    costM = np.zeros((n_test, n_train))
+    for i, test_i in enumerate(test_items):
+        for j, train_j in enumerate(train_items):
+            costM[i, j] = f_cost(test_i, train_j)
+    if ftype == 'cost':
+        y_hats = np.argmin(costM, axis=1)
+    elif ftype == 'score':
+        y_hats = np.argmax(costM, axis=1)
+    else:
+        raise ValueError('Unexpected ftype: {}'.format(ftype))
+
+    # compute the error rate by counting the number of correct predictions
+    correct = len([1 for y_hat, answer in zip(y_hats, answers_files)
+                   if train_files[y_hat] == answer])
+    pcorrect = correct / float(n_test)  # Python 2.x ensure float division
+    perror = 1.0 - pcorrect
+    return perror * 100
+
 
 def ModHausdorffDistance(itemA,itemB):
 	# Modified Hausdorff Distance
