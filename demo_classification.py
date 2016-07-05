@@ -66,40 +66,36 @@ def classification_run(folder, f_load, f_cost, ftype='cost'):
     return perror * 100
 
 
-def ModHausdorffDistance(itemA,itemB):
-	# Modified Hausdorff Distance
-	#
-	# Input
-	#  itemA : [n x 2] coordinates of "inked" pixels
-	#  itemB : [m x 2] coordinates of "inked" pixels
-	#
-	#  M.-P. Dubuisson, A. K. Jain (1994). A modified hausdorff distance for object matching.
-	#  International Conference on Pattern Recognition, pp. 566-568.
-	#
-	D = cdist(itemA,itemB)
-	mindist_A = D.min(axis=1)
-	mindist_B = D.min(axis=0)
-	mean_A = np.mean(mindist_A)
-	mean_B = np.mean(mindist_B)
-	return max(mean_A,mean_B)
+def ModHausdorffDistance(itemA, itemB):
+    # Modified Hausdorff Distance
+    #
+    # Input
+    #  itemA : [n x 2] coordinates of "inked" pixels
+    #  itemB : [m x 2] coordinates of "inked" pixels
+    #
+    #  M.-P. Dubuisson, A. K. Jain (1994). A modified hausdorff distance for object matching.
+    #  International Conference on Pattern Recognition, pp. 566-568.
+    #
+    D = cdist(itemA, itemB)
+    mindist_A = D.min(axis=1)
+    mindist_B = D.min(axis=0)
+    mean_A = np.mean(mindist_A)
+    mean_B = np.mean(mindist_B)
+    return max(mean_A, mean_B)
+
 
 def LoadImgAsPoints(fn):
-	# Load image file and return coordinates of 'inked' pixels in the binary image
-	# 
-	# Output:
-	#  D : [n x 2] rows are coordinates
-	I = imread(fn,flatten=True)
-	I = np.array(I,dtype=bool)
-	I = np.logical_not(I)
-	(row,col) = I.nonzero()
-	D = np.array([row,col])
-	D = np.transpose(D)
-	D = D.astype(float)
-	n = D.shape[0]
-	mean = np.mean(D,axis=0)
-	for i in range(n):
-		D[i,:] = D[i,:] - mean
-	return D
+    # Load image file and return coordinates of 'inked' pixels in the binary
+    # image
+    #
+    # Output:
+    #  D : [n x 2] rows are coordinates
+    I = imread(fn, flatten=True)
+    # Convert to boolean array and invert the pixel values
+    I = ~np.array(I, dtype=np.bool)
+    # Create a new array of all the non-zero element coordinates
+    D = np.array(I.nonzero()).T
+    return D - D.mean(axis=0)
 
 
 # Main function
