@@ -1,33 +1,16 @@
+import os
 import numpy as np
 import copy
 from scipy.ndimage import imread
 from scipy.spatial.distance import cdist
 
-# Parameters
-nrun = 20 # number of classification runs
-fname_label = 'class_labels.txt' # where class labels are stored for each run
 
-# Main function
-if __name__ == "__main__":
-	#
-	# Running this demo should lead to a result of 38.8 percent errors.
-	#
-	#   M.-P. Dubuisson, A. K. Jain (1994). A modified hausdorff distance for object matching.
-	#     International Conference on Pattern Recognition, pp. 566-568.
-	#
-	# ** Models should be trained on images in 'images_background' directory to avoid 
-	#  using images and alphabets used in the one-shot evaluation **
-	#
-	print 'One-shot classification demo with Modified Hausdorff Distance'
-	perror = np.zeros(nrun)
-	for r in range(1,nrun+1):
-		rs = str(r)
-		if len(rs)==1:
-			rs = '0' + rs		
-		perror[r-1] = classification_run('run'+rs, LoadImgAsPoints, ModHausdorffDistance, 'cost')
-		print " run " + str(r) + " (error " + str(	perror[r-1] ) + "%)"		
-	total = np.mean(perror)
-	print " average error " + str(total) + "%"
+# Parameters
+nrun = 20  # number of classification runs
+path_to_script_dir = os.path.dirname(os.path.realpath(__file__))
+path_to_all_runs = os.path.join(path_to_script_dir, 'all_runs')
+fname_label = 'class_labels.txt'  # where class labels are stored for each run
+
 
 def classification_run(folder,f_load,f_cost,ftype='cost'):
 	# Compute error rate for one run of one-shot classification
@@ -114,3 +97,25 @@ def LoadImgAsPoints(fn):
 	for i in range(n):
 		D[i,:] = D[i,:] - mean
 	return D
+
+
+# Main function
+if __name__ == "__main__":
+    #
+    # Running this demo should lead to a result of 38.8 percent errors.
+    #
+    #   M.-P. Dubuisson, A. K. Jain (1994). A modified hausdorff distance for object matching.
+    #     International Conference on Pattern Recognition, pp. 566-568.
+    #
+    # ** Models should be trained on images in 'images_background' directory to
+    #    avoid using images and alphabets used in the one-shot evaluation **
+    #
+    print('One-shot classification demo with Modified Hausdorff Distance')
+    perror = np.zeros(nrun)
+    for r in range(nrun):
+        perror[r] = classification_run('run{:02d}'.format(r + 1),
+                                       LoadImgAsPoints, ModHausdorffDistance,
+                                       'cost')
+        print(' run {:02d} (error {:.1f}%)'.format(r, perror[r]))
+    total = np.mean(perror)
+    print(' average error {:.1f}%'.format(total))
