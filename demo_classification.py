@@ -5,10 +5,10 @@ from scipy.spatial.distance import cdist
 
 
 # Parameters
-nrun = 20  # number of classification runs
+nrun = 20  # Number of classification runs
 path_to_script_dir = os.path.dirname(os.path.realpath(__file__))
 path_to_all_runs = os.path.join(path_to_script_dir, 'all_runs')
-fname_label = 'class_labels.txt'  # where class labels are stored for each run
+fname_label = 'class_labels.txt'  # Where class labels are stored for each run
 
 
 def classification_run(folder, f_load, f_cost, ftype='cost'):
@@ -28,7 +28,6 @@ def classification_run(folder, f_load, f_cost, ftype='cost'):
     #
     assert ftype in {'cost', 'score'}
 
-    # get file names
     with open(os.path.join(path_to_all_runs, folder, fname_label)) as f:
         pairs = [line.split() for line in f.readlines()]
     # Unzip the pairs into two sets of tuples
@@ -40,13 +39,13 @@ def classification_run(folder, f_load, f_cost, ftype='cost'):
     n_train = len(train_files)
     n_test = len(test_files)
 
-    # load the images (and, if needed, extract features)
+    # Load the images (and, if needed, extract features)
     train_items = [f_load(os.path.join(path_to_all_runs, f))
                    for f in train_files]
     test_items = [f_load(os.path.join(path_to_all_runs, f))
                   for f in test_files]
 
-    # compute cost matrix
+    # Compute cost matrix
     costM = np.zeros((n_test, n_train))
     for i, test_i in enumerate(test_items):
         for j, train_j in enumerate(train_items):
@@ -56,6 +55,7 @@ def classification_run(folder, f_load, f_cost, ftype='cost'):
     elif ftype == 'score':
         y_hats = np.argmax(costM, axis=1)
     else:
+        # This should never be reached due to the assert above
         raise ValueError('Unexpected ftype: {}'.format(ftype))
 
     # compute the error rate by counting the number of correct predictions
@@ -66,12 +66,12 @@ def classification_run(folder, f_load, f_cost, ftype='cost'):
     return perror * 100
 
 
-def ModHausdorffDistance(itemA, itemB):
+def modified_hausdorf_distance(itemA, itemB):
     # Modified Hausdorff Distance
     #
     # Input
-    #  itemA : [n x 2] coordinates of "inked" pixels
-    #  itemB : [m x 2] coordinates of "inked" pixels
+    #  itemA : [n x 2] coordinates of black pixels
+    #  itemB : [m x 2] coordinates of black pixels
     #
     #  M.-P. Dubuisson, A. K. Jain (1994). A modified hausdorff distance for object matching.
     #  International Conference on Pattern Recognition, pp. 566-568.
@@ -84,13 +84,16 @@ def ModHausdorffDistance(itemA, itemB):
     return max(mean_A, mean_B)
 
 
-def LoadImgAsPoints(fn):
-    # Load image file and return coordinates of 'inked' pixels in the binary
-    # image
+def load_img_as_points(filename):
+    # Load image file and return coordinates of black pixels in the binary image
+    #
+    # Input
+    #  filename : string, absolute path to image
     #
     # Output:
     #  D : [n x 2] rows are coordinates
-    I = imread(fn, flatten=True)
+    #
+    I = imread(filename, flatten=True)
     # Convert to boolean array and invert the pixel values
     I = ~np.array(I, dtype=np.bool)
     # Create a new array of all the non-zero element coordinates
@@ -101,7 +104,7 @@ def LoadImgAsPoints(fn):
 # Main function
 if __name__ == "__main__":
     #
-    # Running this demo should lead to a result of 38.8 percent errors.
+    # Running this demo should lead to a result of 38.8% average error rate.
     #
     #   M.-P. Dubuisson, A. K. Jain (1994). A modified hausdorff distance for object matching.
     #     International Conference on Pattern Recognition, pp. 566-568.
@@ -113,8 +116,9 @@ if __name__ == "__main__":
     perror = np.zeros(nrun)
     for r in range(nrun):
         perror[r] = classification_run('run{:02d}'.format(r + 1),
-                                       LoadImgAsPoints, ModHausdorffDistance,
+                                       load_img_as_points,
+                                       modified_hausdorf_distance,
                                        'cost')
         print(' run {:02d} (error {:.1f}%)'.format(r, perror[r]))
     total = np.mean(perror)
-    print(' average error {:.1f}%'.format(total))
+    print('Average error {:.1f}%'.format(total))
