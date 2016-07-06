@@ -5,23 +5,15 @@ This is a One-Shot Learning Handwritten Character Classifer written in Python us
 Dependencies
 ============
 
-* Python 2.7 - (https://www.python.org/downloads/)
+* Python - (https://www.python.org/downloads/)
 * scipy - `pip install scipy`
 * numpy `pip install numpy`
-* copy `pip install copy`
 
 Use [pip](https://pypi.python.org/pypi/pip) to install any missing dependencies
 
 Basic Usage
 ===========
-
-Step 1 - Move the demo class labeled 'demo_classification.py' to the all_runs folder 
-
-```shell
-mv demo_classification.py all_runs 
-```
-
-Step 2 - Run the code! It'll train against the handwritten character samples in the all_runs folder and then test it's classification ability.
+Step 1 - Run the code! It'll train against the handwritten character samples in the `all_runs` folder and then test it's classification ability.
 It should output an average error rate of around 38%.
 ```shell
 python demo_classification.py
