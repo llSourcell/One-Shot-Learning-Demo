@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import os
 import numpy as np
 from scipy.ndimage import imread
