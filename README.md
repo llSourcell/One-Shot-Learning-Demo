@@ -8,6 +8,7 @@ Dependencies
 * Python - (https://www.python.org/downloads/)
 * scipy - `pip install scipy`
 * numpy `pip install numpy`
+* Pillow `pip install Pillow`
 
 Use [pip](https://pypi.python.org/pypi/pip) to install any missing dependencies
 
